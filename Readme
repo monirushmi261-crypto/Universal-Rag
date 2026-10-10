@@ -1,1 +1,272 @@
+<div align="center">
 
+# ⚡ UniversalRAG
+
+### Multimodal Agentic RAG: chat with your PDFs, spreadsheets, charts and images, with every answer traced back to its source
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Gemini](https://img.shields.io/badge/LLM-Google%20Gemini-4285F4?logo=google&logoColor=white)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014-000000?logo=nextdotjs&logoColor=white)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)
+
+</div>
+
+---
+
+## 📖 Overview
+
+Most RAG chatbots only read text. **UniversalRAG** accepts **PDFs, Excel/CSV files, and images**, then uses an **agentic router** to send each question to the specialist best suited to answer it: a text, table, chart, image, or data-analysis agent.
+
+Every response comes back with **verifiable evidence snippets and source citations**, so you can check where an answer came from instead of trusting it blindly. It also remembers the conversation, so follow-ups like *"and what about the previous quarter?"* work without re-uploading anything.
+
+> **No API key? No problem.** UniversalRAG ships with an offline simulation engine, so the app and the full test suite run even without a Gemini key.
+
+---
+
+## ✨ Features
+
+| Feature                       | Description                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------- |
+| **Multimodal ingestion**      | PDF, CSV, XLSX/XLS, and PNG/JPG/WEBP/BMP uploads with automatic type detection               |
+| **Agentic routing**           | Schema-enforced JSON routing picks one or several agents per question                        |
+| **Five specialist agents**    | Text, Table, Chart, Image, and Data (EDA) agents                                             |
+| **Mixed-question support**    | Compares sources across modalities, e.g. a chart against a paragraph                         |
+| **Conversation memory**       | Resolves follow-up references using the chat history                                         |
+| **Evidence and citations**    | Every answer includes source snippets and citations in a standard JSON response              |
+| **Session-isolated indexing** | In-memory vector index scoped per conversation                                               |
+| **Auto EDA and charts**       | Summary stats, outliers, correlations, bar/histogram/pie/heatmap from raw data               |
+| **Two interfaces**            | Streamlit app, or a Next.js frontend backed by a FastAPI server                              |
+| **Offline fallback**          | Simulation engine works without an API key                                                   |
+
+---
+
+## 🧠 Architecture
+
+```mermaid
+flowchart TD
+    A[Upload: PDF / Table / Image] --> B[M1 Upload Handling]
+    B --> C[M2 Content Extraction]
+    C --> D[M3 Embedding and Indexing]
+    Q[User Question] --> E[M9 Conversation State]
+    E --> F[M4 Agentic Router]
+    F --> G1[Text Agent]
+    F --> G2[Table Agent]
+    F --> G3[Chart Agent]
+    F --> G4[Image Agent]
+    F --> G5[Data Agent]
+    D --> G1
+    D --> G2
+    G1 & G2 & G3 & G4 & G5 --> H[M6 Answer Generation]
+    H --> I[M7 Evidence and Source Tracking]
+    I --> J[Answer + Citations]
+    J --> E
+```
+
+### Modules
+
+| Module  | Responsibility                                                               |
+| ------- | ---------------------------------------------------------------------------- |
+| **M1**  | Upload handling, MIME and extension detection, file registry                 |
+| **M2**  | Content extraction: PDF text, DataFrames, preprocessed images                |
+| **M3**  | Embeddings and a conversation-scoped in-memory vector index                  |
+| **M4**  | Agentic router: category, intent, target agents, reference resolution        |
+| **M5**  | Specialized agents (text, table, chart, image, data)                         |
+| **M6**  | Answer generation and multi-agent merging                                    |
+| **M7**  | Evidence and source tracking into a standardized response                    |
+| **M8**  | Chat interface (Streamlit app and Next.js frontend)                          |
+| **M9**  | Conversation state and memory                                                |
+
+### Agents
+
+| Agent     | Handles                                                              | Example question                                         |
+| --------- | -------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Text**  | Semantic search and synthesis over PDF text                          | *"What is the main objective of this document?"*         |
+| **Table** | Structured queries and aggregations on spreadsheets                  | *"Which product has the highest sales and by how much?"* |
+| **Chart** | Vision-based reading of uploaded chart images                        | *"Which month recorded the highest revenue?"*            |
+| **Image** | OCR, diagrams, and visual inspection                                 | *"What information is shown in this image?"*             |
+| **Data**  | EDA, outliers, correlations, auto-generated charts from raw CSV/XLSX | *"Show me the correlations and any outliers."*           |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/<your-username>/universalrag.git
+cd universalrag
+```
+
+### 2. Create a virtual environment
+
+**Windows**
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**macOS / Linux**
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure your API key (optional)
+
+**Windows**
+
+```bash
+copy .env.example .env
+```
+
+**macOS / Linux**
+
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and set your key:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL_TEXT=gemini-2.5-flash
+GEMINI_MODEL_VISION=gemini-2.5-flash
+GEMINI_MODEL_EMBEDDING=text-embedding-004
+```
+
+> 🔒 **Never commit your `.env` file.** Make sure it is listed in `.gitignore`.
+
+---
+
+## ▶️ Run the App
+
+Pick the interface you prefer.
+
+### Option A: Streamlit (simplest)
+
+```bash
+streamlit run app.py
+```
+
+Open **http://localhost:8501**.
+
+### Option B: Next.js frontend + FastAPI backend
+
+**Terminal 1: backend**
+
+```bash
+python server.py
+```
+
+The API runs at **http://127.0.0.1:8000** (interactive docs at `/docs`).
+
+**Terminal 2: frontend**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:3000**. To point the frontend at a different backend, set `NEXT_PUBLIC_API_URL`.
+
+---
+
+## 🔌 API Reference
+
+| Method | Endpoint               | Description                                         |
+| ------ | ---------------------- | --------------------------------------------------- |
+| `GET`  | `/`                    | Health check                                        |
+| `GET`  | `/sample-data`         | List the bundled sample files                       |
+| `POST` | `/load-sample`         | Load a sample file into a session                   |
+| `POST` | `/upload`              | Upload a document (`file`, `session_id`)            |
+| `POST` | `/query`               | Ask a question and get an answer with sources       |
+| `GET`  | `/session/{id}`        | Retrieve a session's files and message history      |
+
+---
+
+## 🧪 Testing
+
+The suite validates each module plus an end-to-end set of six scenarios:
+
+| #   | Scenario            | Expected routing                                |
+| --- | ------------------- | ----------------------------------------------- |
+| 1   | Text question       | Text Agent                                      |
+| 2   | Table question      | Table Agent                                     |
+| 3   | Chart question      | Chart Agent                                     |
+| 4   | Image question      | Image Agent                                     |
+| 5   | Mixed question      | Text Agent + Chart Agent                        |
+| 6   | Follow-up question  | Reference resolved, then Table Agent            |
+
+```bash
+python -m pytest tests/
+```
+
+---
+
+## 🗂️ Project Structure
+
+```
+universalrag/
+├── app.py                    # Streamlit interface
+├── server.py                 # FastAPI backend
+├── requirements.txt
+├── .env.example
+├── src/
+│   ├── config.py             # Settings and environment
+│   ├── llm_client.py         # Gemini wrapper with offline fallback
+│   ├── pipeline.py           # End-to-end orchestrator
+│   └── modules/
+│       ├── m1_upload.py
+│       ├── m2_extraction.py
+│       ├── m3_indexing.py
+│       ├── m4_router.py
+│       ├── m6_generation.py
+│       ├── m7_tracking.py
+│       ├── m9_state.py
+│       ├── text_indexer.py
+│       └── m5_agents/        # text, table, chart, image, data
+├── frontend/                 # Next.js 14 + Tailwind chat UI
+├── sample_data/              # Demo PDF, XLSX, CSV, and images
+└── tests/                    # Pytest suite
+```
+
+---
+
+## 🛠️ Tech Stack
+
+**Backend:** Python · Google Gemini (`google-genai`) · FastAPI · Pandas · scikit-learn · Pillow · Matplotlib · Seaborn
+
+**Frontend:** Next.js 14 · React 18 · TypeScript · Tailwind CSS · react-markdown · Streamlit
+
+---
+
+## 🔭 Future Work
+
+- Persistent vector store (replacing the in-memory index)
+- Real authentication and per-user storage
+- Streaming responses
+- Support for DOCX and PPTX files
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for details.
+
+---
+
+<div align="center">
+
+⭐ If you find this project useful, consider giving it a star!
+
+</div>
